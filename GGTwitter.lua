@@ -230,9 +230,6 @@ function GGTwitter:isAuthorised()
 end
 
 --- Loads the authorisation data from disk. Called internally.
--- @param str The string to convert
--- @param delimeters A table of delimeters to split on
--- @return The converted table.
 function GGTwitter:load()
 
 	local path = system.pathForFile( "twitter.dat", system.DocumentsDirectory )
