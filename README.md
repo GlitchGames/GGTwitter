@@ -4,7 +4,8 @@ GGTwitter
 GGTwitter makes it very easy to authorise your player with Twitter and post messages. 
 Authorisation data is stored so that the user only has to login the first time.
 
-oAuth.lua from the Twitter sample included with Corona is required.
+oAuth.lua from here - https://github.com/breinhart/Corona-SDK-Tweet-Media/blob/master/utils/oAuth.lua
+multipartForm.lua from here - https://github.com/breinhart/Corona-SDK-Tweet-Media/blob/master/utils/multipartForm.lua
 
 Basic Usage
 -------------------------
@@ -35,6 +36,11 @@ twitter:authorise()
 ##### Tweet a message
 ```lua
 twitter:post( "Hello, world!" )
+```
+
+##### Tweet a message with an image
+```lua
+twitter:post( "Check out my photo!", "image.png" )
 ```
 
 ##### Check if the user is authorised.

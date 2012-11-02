@@ -19,7 +19,8 @@
 --
 -- Requirements: 
 --
---		oAuth.lua from the Twitter sample included with Corona.
+--		oAuth.lua from here - https://github.com/breinhart/Corona-SDK-Tweet-Media/blob/master/utils/oAuth.lua
+--		multipartForm.lua from here - https://github.com/breinhart/Corona-SDK-Tweet-Media/blob/master/utils/multipartForm.lua
 --
 -- Copyright (C) 2012 Graham Ranson, Glitch Games Ltd.
 --
@@ -267,7 +268,8 @@ end
 
 --- Post a message to the users Twitter feed.
 -- @param message The message to post.
-function GGTwitter:post( message )
+-- @param image The filename of an image in system.DocumentsDirectory to post. Optional.
+function GGTwitter:post( message, image )
 
 	local params = {}
 	params[ 1 ] =
@@ -276,7 +278,12 @@ function GGTwitter:post( message )
 		value = message
 	}
 		
-	oAuth.makeRequest( "http://api.twitter.com/1/statuses/update.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
+	if image then
+		oAuth.makeRequestWithMedia( "http://upload.twitter.com/1/statuses/update_with_media.json", params, image, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
+		print("A")
+	else
+		oAuth.makeRequest( "http://api.twitter.com/1/statuses/update.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
+	end
 	
 	if self.listener then
 		self.listener{ phase = "posted" }
