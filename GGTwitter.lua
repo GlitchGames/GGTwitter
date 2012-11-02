@@ -284,6 +284,31 @@ function GGTwitter:post( message )
 	
 end
 
+--- Follow a user.
+-- @param name The name of the user to follow.
+function GGTwitter:follow( name )
+
+	local params = {}
+	
+	params[ 1 ] =
+	{
+		key = 'screen_name',
+		value = name
+	}
+	params[ 2 ] =
+	{
+		key = 'follow',
+		value = "true"
+	}
+	
+	oAuth.makeRequest( "http://api.twitter.com/1/friendships/create.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
+	
+	if self.listener then
+		self.listener{ phase = "followed" }
+	end
+	
+end
+
 --- Destroys the Twitter object.
 function GGTwitter:destroy()
 	self:deauthorise()

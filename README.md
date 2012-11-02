@@ -42,6 +42,11 @@ twitter:post( "Hello, world!" )
 print( twitter:isAuthorised() )
 ```
 
+##### Follow a user.
+```lua
+twitter:follow( "GlitchGames" )
+```
+
 ##### Deauthorise the user
 ```lua
 twitter:deauthorise()
