@@ -217,7 +217,10 @@ function GGTwitter:authorise()
 		
 	end
 
-	native.showWebPopup( 0, 0, display.contentWidth, display.contentHeight, "http://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
+	local fullX = display.viewableContentWidth + -1 * ( display.screenOriginX * 2 )
+	local fullY = display.viewableContentHeight + -1 * ( display.screenOriginY * 2 )
+	
+	native.showWebPopup( display.screenOriginX, display.screenOriginY, fullX, fullY, "http://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
 			
 end
 
