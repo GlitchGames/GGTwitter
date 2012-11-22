@@ -52,8 +52,9 @@ local oAuth = require( "oAuth" )
 -- @param consumerKey The consumer key of your app.
 -- @param consumerSecret The consumer secret of your app.
 -- @param listener A listener function to be called on specific events such as login/logout.
+-- @param url The twitter callback url?
 -- @return The new object.
-function GGTwitter:new( consumerKey, consumerSecret, listener )
+function GGTwitter:new( consumerKey, consumerSecret, listener, url )
     
     local self = {}
     
@@ -61,10 +62,9 @@ function GGTwitter:new( consumerKey, consumerSecret, listener )
     
     self.consumerKey = consumerKey
     self.consumerSecret = consumerSecret
-    self.url = "http://www.google.co.uk"
+    self.listener = listener
+    self.url = url or "http://www.google.co.uk"
   
-  	self.listener = listener
-  	
   	self.accessToken = nil
 	self.accessTokenSecret = nil
 
