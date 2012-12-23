@@ -324,16 +324,19 @@ end
 -- @param url The link for the tweet.
 -- @param image Filename of an image for the tweet. Optional.
 -- @param baseDir Base directory for the image. Optional, defaults to system.DocumentsDirectory.
-function GGTwitter:showPopup( message, url, image, baseDir )
+-- @param listener Optional callback function for the twitter event.
+function GGTwitter:showPopup( message, url, image, baseDir, listener )
 
-	local listener = function( event )
-		
+	local twitterListener = function( event )
+		if listener then
+			listener( event )
+		end
 	end
 	
 	local options = {}
 	options.message = message
 	options.url = url
-	options.listener = listener
+	options.listener = twitterListener
 	
 	if image then
 		options.image = {}
