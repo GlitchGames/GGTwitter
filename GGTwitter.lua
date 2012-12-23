@@ -319,6 +319,32 @@ function GGTwitter:follow( name )
 	
 end
 
+--- Show a native twitter popup.
+-- @param message The text for the tweet.
+-- @param url The link for the tweet.
+-- @param image Filename of an image for the tweet. Optional.
+-- @param baseDir Base directory for the image. Optional, defaults to system.DocumentsDirectory.
+function GGTwitter:showPopup( message, url, image, baseDir )
+
+	local listener = function( event )
+		
+	end
+	
+	local options = {}
+	options.message = message
+	options.url = url
+	options.listener = listener
+	
+	if image then
+		options.image = {}
+		options.image.filename = image
+		options.image.baseDir = baseDir or system.DocumentsDirectory
+	end
+
+	native.showPopup( "twitter", options )
+	
+end
+
 --- Destroys the Twitter object.
 function GGTwitter:destroy()
 	self:deauthorise()

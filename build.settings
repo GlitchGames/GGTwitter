@@ -1,0 +1,23 @@
+settings = 
+{
+	
+	orientation = 
+	{
+		default = "portrait",
+		supported = 
+		{ 
+			"portrait", "portraitUpsideDown" 
+		}
+	},
+	
+	iphone = 
+	{
+		plist = 
+		{
+			CFBundleDisplayName = "GGTwitter",
+			UIStatusBarHidden = true,
+			UIPrerenderedIcon = true,
+			UIApplicationExitsOnSuspend = false
+		}
+	},
+}
