@@ -65,12 +65,18 @@ function GGTwitter:new( consumerKey, consumerSecret, listener, url )
     self.listener = listener
     self.url = url or "http://www.google.co.uk"
   
+  	self.requestTokenURL = "https://api.twitter.com/oauth/request_token"
+  	self.authorizeURL = "https://api.twitter.com/oauth/authorize"
+  	self.accessTokenURL = "https://api.twitter.com/oauth/access_token"
+  
   	self.accessToken = nil
 	self.accessTokenSecret = nil
 
 	self.userID = nil
 	self.screenName = nil
   
+  	self.apiVersion = 1.1
+  	
   	self:load()
   	
     return self
@@ -154,7 +160,9 @@ end
 
 --- Authorises the user.
 function GGTwitter:authorise()
-
+	
+	local twitterRequest 
+	
 	if self:isAuthorised() then
 		if self.listener then
 			self.listener{ phase = "authorised" }
@@ -162,66 +170,84 @@ function GGTwitter:authorise()
 		return
 	end
 	
-	local twitterRequest = ( oAuth.getRequestToken( self.consumerKey, self.url, "http://twitter.com/oauth/request_token", self.consumerSecret ) )
-	local twitterRequestToken = twitterRequest.token
-	local twitterRequestTokenSecret = twitterRequest.token_secret
-
 	local listener = function( event )
-	
+
 		local remainOpen = true
 		local url = event.url
 
 		if url:find( "oauth_token" ) and url:find( self.url ) then
 			
-			native.showAlert( "a", event.phase, { "OK" } )
-			
 			url = url:sub( url:find( "?" ) + 1, url:len() )
-	
-			local authoriseResponse = self:responseToTable( url, { "=" , "&" } )
-			remainOpen = false
-	
-			local accessResponse = self:responseToTable( oAuth.getAccessToken( authoriseResponse.oauth_token, authoriseResponse.oauth_verifier, twitterRequestToken, self.consumerKey, self.consumerSecret, "https://api.twitter.com/oauth/access_token"), { "=", "&" } )
 			
-			self.accessToken = accessResponse.oauth_token
-			self.accessTokenSecret = accessResponse.oauth_token_secret
-			self.userID = accessResponse.user_id
-			self.screenName = accessResponse.screen_name
+			local accessCallback = function( status, accessResponse )
+				
+				accessResponse = self:responseToTable( accessResponse, { "=" , "&" } )
+				self.accessToken = accessResponse.oauth_token
+				self.accessTokenSecret = accessResponse.oauth_token_secret
+				self.userID = accessResponse.user_id
+				self.screenName = accessResponse.screen_name
 			
-			if self.listener then
-				self.listener{ phase = "authorised" }
+				if not self.accessToken then
+				
+					if self.listener then
+						self.listener{ phase = "failed" }
+					end
+			
+					return
+				end
+				
+				if self.listener then
+					self.listener{ phase = "authorised" }
+				end
+	
+				self:save()
+				
 			end
 		
-			self:save()
+			local authoriseResponse = self:responseToTable( url, { "=" , "&" } )
+			remainOpen = false
+
+			oAuth.getAccessToken( authoriseResponse.oauth_token, authoriseResponse.oauth_verifier, twitterRequestToken, self.consumerKey, self.consumerSecret, "https://api.twitter.com/oauth/access_token", accessCallback )
 			
 		elseif url:find( self.url ) then
+
+			if self.listener then
+				self.listener{ phase = "failed" }
+			end
+
+			remainOpen = false	
+
+		end
+
+		return remainOpen
+
+	end
+	
+	local authCallback = function( status, result )
+
+		local twitterRequestToken = result:match('oauth_token=([^&]+)')
+		local twitterRequestTokenSecret = result:match('oauth_token_secret=([^&]+)')
+	
+		if not twitterRequestToken then
 		
 			if self.listener then
 				self.listener{ phase = "failed" }
 			end
-			
-			remainOpen = false	
-			
+		
+			return
+		
 		end
 		
-		return remainOpen
-		
-	end
-	
-	if not twitterRequestToken then
-		
-		if self.listener then
-			self.listener{ phase = "failed" }
-		end
-		
-		return
-		
-	end
+		local fullX = display.viewableContentWidth + -1 * ( display.screenOriginX * 2 )
+		local fullY = display.viewableContentHeight + -1 * ( display.screenOriginY * 2 )
 
-	local fullX = display.viewableContentWidth + -1 * ( display.screenOriginX * 2 )
-	local fullY = display.viewableContentHeight + -1 * ( display.screenOriginY * 2 )
+		native.showWebPopup( display.screenOriginX, display.screenOriginY, fullX, fullY, "http://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
+
 	
-	native.showWebPopup( display.screenOriginX, display.screenOriginY, fullX, fullY, "http://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
-			
+	end
+	
+	local twitterRequest = ( oAuth.getRequestToken( self.consumerKey, self.url, self.requestTokenURL, self.consumerSecret, authCallback ) )
+	
 end
 
 --- Checks if the user is authorised.
@@ -274,6 +300,20 @@ end
 -- @param image The filename of an image in system.DocumentsDirectory to post. Optional.
 function GGTwitter:post( message, image )
 
+	local postCallback = function( status, result )
+	
+		local response = json.decode( result )
+
+		if self.listener then
+			if status then
+				self.listener{ phase = "posted", response = response }
+			else
+				self.listener{ phase = "failed", response = response }
+			end
+		end
+		
+	end
+	
 	local params = {}
 	params[ 1 ] =
 	{
@@ -282,16 +322,11 @@ function GGTwitter:post( message, image )
 	}
 		
 	if image then
-		oAuth.makeRequestWithMedia( "http://upload.twitter.com/1/statuses/update_with_media.json", params, image, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
-		print("A")
+		oAuth.makeRequestWithMedia( "https://upload.twitter.com/1/statuses/update_with_media.json", params, image, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
 	else
-		oAuth.makeRequest( "http://api.twitter.com/1/statuses/update.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
+		oAuth.makeRequest( "https://api.twitter.com/" .. self.apiVersion .. "/statuses/update.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
 	end
-	
-	if self.listener then
-		self.listener{ phase = "posted" }
-	end
-	
+		
 end
 
 --- Follow a user.
@@ -311,11 +346,13 @@ function GGTwitter:follow( name )
 		value = "true"
 	}
 	
-	oAuth.makeRequest( "http://api.twitter.com/1/friendships/create.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST" )
-	
-	if self.listener then
-		self.listener{ phase = "followed" }
+	local postCallback = function()
+		if self.listener then
+			self.listener{ phase = "followed" }
+		end
 	end
+	
+	oAuth.makeRequest( "http://api.twitter.com/" .. self.apiVersion .. "/friendships/create.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
 	
 end
 
