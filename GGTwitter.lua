@@ -241,9 +241,7 @@ function GGTwitter:authorise()
 		local fullX = display.viewableContentWidth + -1 * ( display.screenOriginX * 2 )
 		local fullY = display.viewableContentHeight + -1 * ( display.screenOriginY * 2 )
 
-		native.showWebPopup( display.screenOriginX, display.screenOriginY, fullX, fullY, "http://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
-
-	
+		native.showWebPopup( display.screenOriginX, display.screenOriginY, fullX, fullY, "https://api.twitter.com/oauth/authorize?oauth_token=" .. twitterRequestToken, { urlRequest = listener } )
 	end
 	
 	local twitterRequest = ( oAuth.getRequestToken( self.consumerKey, self.url, self.requestTokenURL, self.consumerSecret, authCallback ) )
@@ -352,7 +350,7 @@ function GGTwitter:follow( name )
 		end
 	end
 	
-	oAuth.makeRequest( "http://api.twitter.com/" .. self.apiVersion .. "/friendships/create.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
+	oAuth.makeRequest( "https://api.twitter.com/" .. self.apiVersion .. "/friendships/create.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
 	
 end
 
