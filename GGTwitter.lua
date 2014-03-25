@@ -179,7 +179,7 @@ function GGTwitter:authorise()
 			
 			url = url:sub( url:find( "?" ) + 1, url:len() )
 			
-			local accessCallback = function( status, accessResponse )
+			local accessCallback = function( isError, accessResponse )
 				
 				accessResponse = self:responseToTable( accessResponse, { "=" , "&" } )
 				self.accessToken = accessResponse.oauth_token
@@ -223,7 +223,7 @@ function GGTwitter:authorise()
 
 	end
 	
-	local authCallback = function( status, result )
+	local authCallback = function( isError, result )
 
 		local twitterRequestToken = result:match('oauth_token=([^&]+)')
 		local twitterRequestTokenSecret = result:match('oauth_token_secret=([^&]+)')
@@ -298,15 +298,15 @@ end
 -- @param image The filename of an image in system.DocumentsDirectory to post. Optional.
 function GGTwitter:post( message, image )
 
-	local postCallback = function( status, result )
+	local postCallback = function( isError, result )
 	
 		local response = json.decode( result )
 
 		if self.listener then
-			if status then
-				self.listener{ phase = "posted", response = response }
-			else
+			if isError then
 				self.listener{ phase = "failed", response = response }
+			else
+				self.listener{ phase = "posted", response = response }
 			end
 		end
 		
