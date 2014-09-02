@@ -293,6 +293,41 @@ function GGTwitter:save()
 	
 end
 
+--- retrieve the few last tweet of any user.
+-- @param name The name of the user.
+-- @param count the number of tweet you want to get.
+function  GGTwitter:getLastTweet( name, count)
+	local params = {}
+	local result
+	
+	params[ 1 ] =
+	{
+		key = 'screen_name',
+		value = name
+	}
+	params[ 2 ] =
+	{
+		key = 'count',
+		value = count
+	}
+	
+	local postCallback = function(isError, result)
+
+		local response = json.decode( result )
+
+		if self.listener then
+			if isError then
+				self.listener{ phase = "failed", response = response }
+			else
+				self.listener{ phase = "Succeed", response = response }
+				print("the tweet are now in event.reponse[].text in the callback")
+			end
+		end
+	end
+	
+	oAuth.makeRequest( "https://api.twitter.com/" .. self.apiVersion .. "/statuses/user_timeline.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "GET", postCallback )
+end
+
 --- Post a message to the users Twitter feed.
 -- @param message The message to post.
 -- @param image The filename of an image in system.DocumentsDirectory to post. Optional.
