@@ -99,6 +99,21 @@ function MultipartFormData:getBody()
                                         el.mimetype,
                                         "\r\n\r\n",
                                 }
+                                if (el.encoding == "base64") then
+                                    elData = {
+                                        "--"..self.boundary.."\r\n",
+                                        "content-disposition: form-data; name=\"",
+                                        el.name,
+                                        "\"; filename=\"",
+                                        el.filename,
+                                        "\"\r\n",
+                                        "Content-Type: ",
+                                        el.mimetype,
+                                         "\r\n",
+                                        "Content-Transfer-Encoding: base64",
+                                        "\r\n\r\n",
+                                    }
+                                end
                                 local elHeader = table.concat(elData)
                                 
                                 local elFile = io.open( el.path, "rb" )
