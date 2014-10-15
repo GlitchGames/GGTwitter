@@ -118,7 +118,7 @@ function makeRequestWithMedia(url, body, media, consumer_key, token, consumer_se
     }
     
     
-    local auth = oAuthSign(url, method, post_data, consumer_secret )--, true)
+    local auth = oAuthSign(url, method, post_data, consumer_secret, true)
     
     local result = rawPostRequestMultipart(url, auth, body, media, callback)
     
@@ -130,58 +130,69 @@ end
 -- Adds "oauth_signature=xyz" to results
 -----------------------------------------------------------------------------------------
 --
-function oAuthSign(url, method, args, consumer_secret)
+function oAuthSign(url, method, args, consumer_secret, multipart)
  
     local token_secret = args.oauth_token_secret or ""
  
     args.oauth_token_secret = nil
  
-	local keys_and_values = {}
-
-	for key, val in pairs(args) do
-		table.insert(keys_and_values, 
-		{
-			key = encode_parameter(key),
-			val = encode_parameter(val)
-		} )
+        local keys_and_values = {}
+ 
+        for key, val in pairs(args) do
+                table.insert(keys_and_values, 
+                {
+                        key = encode_parameter(key),
+                        val = encode_parameter(val)
+                })
     end
  
-    table.sort(keys_and_values,
-    	function(a,b)
-			if a.key < b.key then
-				return true
-			elseif a.key > b.key then
-				return false
-			else
-				return a.val < b.val
-			end
-    	end
-     )
+    table.sort(keys_and_values, function(a,b)
+        if a.key < b.key then
+            return true
+        elseif a.key > b.key then
+            return false
+        else
+            return a.val < b.val
+        end
+    end)
     
     local key_value_pairs = {}
+    
+    
  
     for _, rec in pairs(keys_and_values) do
         table.insert(key_value_pairs, rec.key .. "=" .. rec.val)
     end
     
-   local query_string_except_signature = table.concat(key_value_pairs, "&")
+   	local query_string_except_signature = table.concat(key_value_pairs, "&")
    
-   local sign_base_string = method .. '&' .. encode_parameter(url) .. '&'
-   		.. encode_parameter(query_string_except_signature)
+   	local sign_base_string
+	sign_base_string = method .. '&' .. encode_parameter(url) .. '&'
+   			.. encode_parameter(query_string_except_signature)
  
-   local key = encode_parameter(consumer_secret) .. '&' .. encode_parameter(token_secret)
-   
-   local hmac_binary = sha1(sign_base_string, key, true)
+   	local key = encode_parameter(consumer_secret) .. '&' .. encode_parameter(token_secret)
+	local hmac_binary = sha1(sign_base_string, key, true)
  
-   local hmac_b64 = mime.b64(hmac_binary)
-   local query_string = query_string_except_signature .. '&oauth_signature=' .. encode_parameter(hmac_b64)
- 
-	if method == "GET" then
-	   return url .. "?" .. query_string
-	else
-		return query_string
-	end
-	
+   	local hmac_b64 = mime.b64(hmac_binary)
+	local query_string = query_string_except_signature .. '&oauth_signature=' .. encode_parameter(hmac_b64)
+
+	--If this is a multipart request, we do not need to include the post body in the signature.
+	if multipart then
+ 		key_value_pairs = {}
+		for _, rec in pairs(keys_and_values) do
+        	table.insert(key_value_pairs, rec.key .. "=\"" .. rec.val .. "\"")
+    	end
+    	query_string_except_signature = table.concat(key_value_pairs, ", ")
+ 		local auth = "OAuth " .. query_string_except_signature .. ', oauth_signature=\"' .. encode_parameter(hmac_b64) .."\""
+
+ 		return auth
+ 	end
+ 	
+    if method == "GET" then
+    	return url .. "?" .. query_string
+    else
+    	return query_string
+    end
 end
 
 -----------------------------------------------------------------------------------------
