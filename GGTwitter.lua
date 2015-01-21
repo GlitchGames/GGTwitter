@@ -355,7 +355,8 @@ function GGTwitter:post( message, image )
 	}
 		
 	if image then
-		oAuth.makeRequestWithMedia( "https://upload.twitter.com/" .. self.apiVersion .. "/statuses/update_with_media.json", params, image, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
+		oAuth.makeRequestWithMedia( "https://api.twitter.com/" .. self.apiVersion .. "/statuses/update_with_media.json", params, image, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
+
 	else
 		oAuth.makeRequest( "https://api.twitter.com/" .. self.apiVersion .. "/statuses/update.json", params, self.consumerKey, self.accessToken, self.consumerSecret, self.accessTokenSecret, "POST", postCallback )
 	end

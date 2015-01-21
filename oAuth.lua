@@ -317,7 +317,8 @@ function rawPostRequestMultipart(url, auth, body, image, callback)
         local multipart = MultipartFormData.new()
         multipart:addHeader("Authorization", auth)
         
-        multipart:addFile("media_data[]", system.pathForFile( image, system.DocumentsDirectory ), "application/octet-stream", "./"..image)
+        multipart:addFile("media", system.pathForFile( image, system.DocumentsDirectory ), "image/png", "./"..image)  
+        
         for i=1, #body do
 	    	multipart:addField(body[i].key, body[i].value)
    	 	end   	 	
